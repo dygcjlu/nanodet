@@ -15,10 +15,19 @@ efficientnet_lite_params = {
     "efficientnet_lite3": [1.2, 1.4, 280, 0.3],
     "efficientnet_lite4": [1.4, 1.8, 300, 0.3],
 }
-
+"""
 model_urls = {
     "efficientnet_lite0": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite0.pth",  # noqa: E501
     "efficientnet_lite1": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite1.pth",  # noqa: E501
+    "efficientnet_lite2": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite2.pth",  # noqa: E501
+    "efficientnet_lite3": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite3.pth",  # noqa: E501
+    "efficientnet_lite4": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite4.pth",  # noqa: E501
+}
+"""
+
+model_urls = {
+    "efficientnet_lite0": None,
+    "efficientnet_lite1": None,
     "efficientnet_lite2": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite2.pth",  # noqa: E501
     "efficientnet_lite3": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite3.pth",  # noqa: E501
     "efficientnet_lite4": "https://github.com/RangiLyu/EfficientNet-Lite/releases/download/v1.0/efficientnet_lite4.pth",  # noqa: E501

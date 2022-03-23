@@ -5,7 +5,7 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320
+save_dir: workspace/nanodet-plus-m_320_v4
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -21,7 +21,7 @@ model:
     fpn:
       name: GhostPAN
       in_channels: [116, 232, 464]
-      out_channels: 96
+      out_channels: 128
       kernel_size: 5
       num_extra_level: 1
       use_depthwise: True
@@ -29,8 +29,8 @@ model:
     head:
       name: NanoDetPlusHead
       num_classes: 3
-      input_channel: 96
-      feat_channels: 96
+      input_channel: 128
+      feat_channels: 128
       stacked_convs: 2
       kernel_size: 5
       strides: [8, 16, 32, 64]
@@ -54,8 +54,8 @@ model:
     aux_head:
       name: SimpleConvHead
       num_classes: 3
-      input_channel: 192
-      feat_channels: 192
+      input_channel: 256
+      feat_channels: 256
       stacked_convs: 4
       strides: [8, 16, 32, 64]
       activation: LeakyReLU

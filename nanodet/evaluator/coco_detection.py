@@ -147,3 +147,66 @@ class CocoDetectionEvaluator:
         for k, v in zip(self.metric_names, aps):
             eval_results[k] = v
         return eval_results
+
+    def evalFromLocal(self, json_path):
+        #json_path = os.path.join(save_dir, "results{}.json".format(rank))
+        #json.dump(results_json, open(json_path, "w"))
+        coco_dets = self.coco_api.loadRes(json_path)
+        coco_eval = COCOeval(
+            copy.deepcopy(self.coco_api), copy.deepcopy(coco_dets), "bbox"
+        )
+        coco_eval.evaluate()
+        coco_eval.accumulate()
+
+        # use logger to log coco eval results
+        redirect_string = io.StringIO()
+        with contextlib.redirect_stdout(redirect_string):
+            coco_eval.summarize()
+        logger.info("\n" + redirect_string.getvalue())
+
+        # print per class AP
+        headers = ["class", "AP50", "mAP"]
+        colums = 6
+        per_class_ap50s = []
+        per_class_maps = []
+        precisions = coco_eval.eval["precision"]
+        # dimension of precisions: [TxRxKxAxM]
+        # precision has dims (iou, recall, cls, area range, max dets)
+        assert len(self.class_names) == precisions.shape[2]
+
+        for idx, name in enumerate(self.class_names):
+            # area range index 0: all area ranges
+            # max dets index -1: typically 100 per image
+            precision_50 = precisions[0, :, idx, 0, -1]
+            precision_50 = precision_50[precision_50 > -1]
+            ap50 = np.mean(precision_50) if precision_50.size else float("nan")
+            per_class_ap50s.append(float(ap50 * 100))
+
+            precision = precisions[:, :, idx, 0, -1]
+            precision = precision[precision > -1]
+            ap = np.mean(precision) if precision.size else float("nan")
+            per_class_maps.append(float(ap * 100))
+
+        num_cols = min(colums, len(self.class_names) * len(headers))
+        flatten_results = []
+        for name, ap50, mAP in zip(self.class_names, per_class_ap50s, per_class_maps):
+            flatten_results += [name, ap50, mAP]
+
+        row_pair = itertools.zip_longest(
+            *[flatten_results[i::num_cols] for i in range(num_cols)]
+        )
+        table_headers = headers * (num_cols // len(headers))
+        table = tabulate(
+            row_pair,
+            tablefmt="pipe",
+            floatfmt=".1f",
+            headers=table_headers,
+            numalign="left",
+        )
+        logger.info("\n" + table)
+
+        aps = coco_eval.stats[:6]
+        eval_results = {}
+        for k, v in zip(self.metric_names, aps):
+            eval_results[k] = v
+        return eval_results

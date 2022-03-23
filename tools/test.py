@@ -19,6 +19,7 @@ import warnings
 
 import pytorch_lightning as pl
 import torch
+import torch.nn as nn
 
 from nanodet.data.collate import naive_collate
 from nanodet.data.dataset import build_dataset
@@ -42,6 +43,42 @@ def parse_args():
     parser.add_argument("--model", type=str, help="ckeckpoint file(.ckpt) path")
     args = parser.parse_args()
     return args
+
+def evalFromLocal(args):
+    load_config(cfg, args.config)
+    local_rank = -1
+    torch.backends.cudnn.enabled = True
+    torch.backends.cudnn.benchmark = True
+    cfg.defrost()
+    timestr = datetime.datetime.now().__format__("%Y%m%d%H%M%S")
+    cfg.save_dir = os.path.join(cfg.save_dir, timestr)
+    mkdir(local_rank, cfg.save_dir)
+    logger = NanoDetLightningLogger(cfg.save_dir)
+
+    assert args.task in ["val", "test"]
+    cfg.update({"test_mode": args.task})
+
+    logger.info("Setting up data...")
+    val_dataset = build_dataset(cfg.data.val, args.task)
+    val_dataloader = torch.utils.data.DataLoader(
+        val_dataset,
+        batch_size=cfg.device.batchsize_per_gpu,
+        shuffle=False,
+        num_workers=cfg.device.workers_per_gpu,
+        pin_memory=True,
+        collate_fn=naive_collate,
+        drop_last=False,
+    )
+    evaluator = build_evaluator(cfg.evaluator, val_dataset)
+
+    json_path = '/root/deng/nanodet/mine/nanodet/workspace/ncnn_result/result.json'
+    eval_results = evaluator.evalFromLocal( json_path)
+    print(eval_results)
+    """
+    txt_path = os.path.join(self.cfg.save_dir, "eval_results.txt")
+    with open(txt_path, "a") as f:
+        for k, v in eval_results.items():
+            f.write("{}: {}\n".format(k, v))"""
 
 
 def main(args):
@@ -94,7 +131,37 @@ def main(args):
     logger.info("Starting testing...")
     trainer.test(task, val_dataloader)
 
+def DeConvTest():
+    pool = nn.MaxPool2d(2, stride=2, return_indices=True)
+    unpool = nn.MaxUnpool2d(2, stride=2)
+    input = torch.tensor([[[[1., 2., 3., 4.],
+                                 [5., 6., 7., 8.],
+                                 [9., 10., 11., 12.],
+                                 [13., 14., 15., 16.]]]])
+    output, indices = pool(input)
+    output = unpool(output, indices)
+    print(output.size())
+
+    input = torch.randn(1, 16, 20, 20)
+    downsample = nn.Conv2d(16, 16, 3, stride=2, padding=1)
+    #upsample = nn.ConvTranspose2d(16, 16, 3, stride=2, padding=1, output_padding=1)
+    upsample = nn.ConvTranspose2d(16, 16, 3, stride=2, padding=0, dilation=1)
+    downsample2 = nn.Conv2d(16, 16, 3, stride=1, padding=1, dilation=2)
+
+    unpool = nn.MaxUnpool2d(2, stride=2)
+    #upsample = nn.ConvTranspose2d(16, 16, 2, stride=2)
+    h = downsample(input)
+    print(h.size())
+    #torch.Size([1, 16, 20, 20])
+    input2 = torch.randn(1, 16, 20, 20)
+    #output = upsample(input2,  output_size=input.size())
+    #output = upsample(input2)
+    #output = downsample2(output)
+    output = unpool(input2)
+    print(output.size())
 
 if __name__ == "__main__":
     args = parse_args()
-    main(args)
+    #main(args)
+    #evalFromLocal(args)
+    DeConvTest()

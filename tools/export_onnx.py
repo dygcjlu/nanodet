@@ -55,7 +55,8 @@ def main(config, model_path, output_path, input_shape=(320, 320)):
         keep_initializers_as_inputs=True,
         opset_version=11,
         input_names=["data"],
-        output_names=["output"],
+        output_names=["output1", "output2", "output3", "output4"],
+        #output_names=["output"],
     )
     logger.log("finished exporting onnx ")
 

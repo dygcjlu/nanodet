@@ -9,6 +9,7 @@ model_urls = {
     "shufflenetv2_1.0x": "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",  # noqa: E501
     "shufflenetv2_1.5x": None,
     "shufflenetv2_2.0x": None,
+    "shufflenetv3_0.8x": None,
 }
 
 
@@ -101,7 +102,7 @@ class ShuffleV2Block(nn.Module):
         return out
 
 
-class ShuffleNetV2(nn.Module):
+class ShuffleNetV3(nn.Module):
     def __init__(
         self,
         model_size="1.5x",
@@ -111,7 +112,7 @@ class ShuffleNetV2(nn.Module):
         activation="ReLU",
         pretrain=True,
     ):
-        super(ShuffleNetV2, self).__init__()
+        super(ShuffleNetV3, self).__init__()
         # out_stages can only be a subset of (2, 3, 4)
         assert set(out_stages).issubset((2, 3, 4))
 
@@ -125,6 +126,8 @@ class ShuffleNetV2(nn.Module):
         self.activation = activation
         if model_size == "0.5x":
             self._stage_out_channels = [24, 48, 96, 192, 1024]
+        elif model_size == "0.8x":
+            self._stage_out_channels = [64, 128, 256, 512, 1024]
         elif model_size == "1.0x":
             self._stage_out_channels = [24, 116, 232, 464, 1024]
         elif model_size == "1.5x":
@@ -200,7 +203,7 @@ class ShuffleNetV2(nn.Module):
                     nn.init.constant_(m.bias, 0.0001)
                 nn.init.constant_(m.running_mean, 0)
         if pretrain:
-            url = model_urls["shufflenetv2_{}".format(self.model_size)]
+            url = model_urls["shufflenetv3_{}".format(self.model_size)]
             if url is not None:
                 pretrained_state_dict = model_zoo.load_url(url)
                 print("=> loading pretrained model {}".format(url))

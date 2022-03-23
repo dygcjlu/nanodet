@@ -5,7 +5,8 @@
 #           AP_small = 0.083
 #               AP_m = 0.278
 #               AP_l = 0.451
-save_dir: workspace/nanodet-plus-m_320
+# FPN resize use
+save_dir: workspace/nanodet-plus-m_320_v5
 model:
   weight_averager:
     name: ExpMovingAverager
@@ -14,14 +15,14 @@ model:
     name: NanoDetPlus
     detach_epoch: 10
     backbone:
-      name: ShuffleNetV2
-      model_size: 1.0x
+      name: ShuffleNetV3
+      model_size: 0.8x
       out_stages: [2,3,4]
       activation: LeakyReLU
     fpn:
-      name: GhostPAN
-      in_channels: [116, 232, 464]
-      out_channels: 96
+      name: GhostPANDeConv
+      in_channels: [128, 256, 512]
+      out_channels: 128
       kernel_size: 5
       num_extra_level: 1
       use_depthwise: True
@@ -29,8 +30,8 @@ model:
     head:
       name: NanoDetPlusHead
       num_classes: 3
-      input_channel: 96
-      feat_channels: 96
+      input_channel: 128
+      feat_channels: 128
       stacked_convs: 2
       kernel_size: 5
       strides: [8, 16, 32, 64]
@@ -54,8 +55,8 @@ model:
     aux_head:
       name: SimpleConvHead
       num_classes: 3
-      input_channel: 192
-      feat_channels: 192
+      input_channel: 256
+      feat_channels: 256
       stacked_convs: 4
       strides: [8, 16, 32, 64]
       activation: LeakyReLU
@@ -92,7 +93,7 @@ device:
   workers_per_gpu: 10
   batchsize_per_gpu: 96
 schedule:
-#  resume:
+# resume:
 #  load_model:
   optimizer:
     name: AdamW

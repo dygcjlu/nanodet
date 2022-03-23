@@ -5,47 +5,21 @@
 #           AP_small = 0.079
 #               AP_m = 0.243
 #               AP_l = 0.406
-save_dir: workspace/efficient0_320
+save_dir: workspace/nanodet_flops
 model:
   arch:
-    name: OneStageDetector
+    name: ComputeFlops
     backbone:
-      name: EfficientNetLite
-      model_name: efficientnet_lite0
-      out_stages: [2,4,6]
-      activation: ReLU6
-    fpn:
-      name: PAN
-      in_channels: [40, 112, 320]
-      out_channels: 96
-      start_level: 0
-      num_outs: 3
-    head:
-      name: NanoDetHead
-      num_classes: 3
-      input_channel: 96
-      feat_channels: 96
-      activation: ReLU6
-      stacked_convs: 2
-      share_cls_reg: True
-      octave_base_scale: 5
-      scales_per_octave: 1
-      strides: [8, 16, 32]
-      reg_max: 7
-      norm_cfg:
-        type: BN
-      loss:
-        loss_qfl:
-          name: QualityFocalLoss
-          use_sigmoid: True
-          beta: 2.0
-          loss_weight: 1.0
-        loss_dfl:
-          name: DistributionFocalLoss
-          loss_weight: 0.25
-        loss_bbox:
-          name: GIoULoss
-          loss_weight: 2.0
+      #name: ResNet
+      #depth: 18
+      #out_stages: [2, 3, 4]
+      #activation: LeakyReLU
+      name: MobileNetV2
+      width_mult: 1.0
+      out_stages: [ 2, 4, 6 ]
+      last_channel: 1280
+      activation: LeakyReLU
+
 data:
   train:
     name: CocoDataset

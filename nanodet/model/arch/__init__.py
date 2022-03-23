@@ -37,6 +37,9 @@ def build_model(model_cfg):
         )
     elif name == "NanoDetPlus":
         model = NanoDetPlus(**model_cfg.arch)
+    elif name == "ComputeFlops":
+        model = OneStageDetector(
+            model_cfg.arch.backbone )
     else:
         raise NotImplementedError
     return model
