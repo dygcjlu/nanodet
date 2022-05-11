@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
-
+import os
 from ..module.activation import act_layers
 
 model_urls = {
@@ -204,7 +204,15 @@ class ShuffleNetV3(nn.Module):
                 nn.init.constant_(m.running_mean, 0)
         if pretrain:
             url = model_urls["shufflenetv3_{}".format(self.model_size)]
+
             if url is not None:
                 pretrained_state_dict = model_zoo.load_url(url)
                 print("=> loading pretrained model {}".format(url))
                 self.load_state_dict(pretrained_state_dict, strict=False)
+            else:
+                root_path = '/root/deng/nanodet/mine/nanodet/pretrain'
+                sub_path = "shufflenetv3_{}".format(self.model_size)
+                full_path = os.path.join(root_path, sub_path, 'model_best.pth')
+                checkpoint = torch.load(full_path)
+                self.load_state_dict(checkpoint['state_dict'], strict=False)
+                print("pretained model loaded!")

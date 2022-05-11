@@ -1,16 +1,17 @@
 import argparse
 import os
 import time
-
+import numpy as np
 import cv2
 import torch
-
+import torchvision.transforms as transforms
 from nanodet.data.batch_process import stack_batch_img
 from nanodet.data.collate import naive_collate
 from nanodet.data.transform import Pipeline
 from nanodet.model.arch import build_model
 from nanodet.util import Logger, cfg, load_config, load_model_weight
 from nanodet.util.path import mkdir
+#from .shufflenetv2_classification import  *
 
 image_ext = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 video_ext = ["mp4", "mov", "avi", "mkv"]
@@ -65,8 +66,18 @@ class Predictor(object):
         meta = dict(img_info=img_info, raw_img=img, img=img)
         meta = self.pipeline(None, meta, self.cfg.data.val.input_size)
         meta["img"] = torch.from_numpy(meta["img"].transpose(2, 0, 1)).to(self.device)
+        #
+        #caffe_img = np.load('/root/deng/pet/ezqdk/v3/ezqdk/projects/reference/nanodet/data/person_320_320_caffe.npy')
+        #meta["img"] = torch.from_numpy(caffe_img).to(self.device)
+        #
         meta = naive_collate([meta])
         meta["img"] = stack_batch_img(meta["img"], divisible=32)
+        #save img input
+        img_tensor = meta["img"].cpu()
+        img_numpy = img_tensor.numpy()
+        #np.save('/root/deng/pet/ezqdk/v3/ezqdk/projects/reference/nanodet/data/person_320_320.npy', img_numpy)
+
+        ######
         with torch.no_grad():
             results = self.model.inference(meta)
         return meta, results
@@ -101,6 +112,31 @@ def main():
     logger = Logger(local_rank, use_tensorboard=False)
     predictor = Predictor(cfg, args.model, logger, device="cuda:0")
     logger.log('Press "Esc", "q" or "Q" to exit.')
+
+    #################################init classification
+    """
+    model = ShuffleNetV2([4, 8, 4], [64, 128, 256, 512, 1024])
+    device = "cuda:0"
+
+    model_path = '/root/deng/nanodet/mine/nanodet/demo/model_best.pth.tar'
+    ckpt = torch.load(model_path, map_location=lambda storage, loc: storage)
+    load_model_weight(model, ckpt, logger)
+    model = model.to(device).eval()
+
+    normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                     std=[0.229, 0.224, 0.225])
+    transform = transforms.Compose([
+            transforms.Resize(256),
+            transforms.CenterCrop(224),
+            transforms.ToTensor(),
+            normalize,
+        ])
+
+
+    #################################
+    """
+
+
     current_time = time.localtime()
     if args.demo == "image":
         if os.path.isdir(args.path):

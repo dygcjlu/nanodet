@@ -125,6 +125,13 @@ class TrainingTask(LightningModule):
                 log_msg += "{}:{:.4f}| ".format(
                     loss_name, loss_states[loss_name].mean().item()
                 )
+                # deng add
+                self.scalar_summary(
+                    "Val_loss/" + loss_name,
+                    "Val",
+                    loss_states[loss_name].mean().item(),
+                    self.global_step,
+                )
             self.logger.info(log_msg)
 
         dets = self.model.head.post_process(preds, batch)

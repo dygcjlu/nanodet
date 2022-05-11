@@ -20,6 +20,9 @@ import warnings
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
+import numpy as np
+from sklearn.preprocessing import normalize
+import cv2
 
 from nanodet.data.collate import naive_collate
 from nanodet.data.dataset import build_dataset
@@ -71,7 +74,8 @@ def evalFromLocal(args):
     )
     evaluator = build_evaluator(cfg.evaluator, val_dataset)
 
-    json_path = '/root/deng/nanodet/mine/nanodet/workspace/ncnn_result/result.json'
+    #json_path = '/root/deng/nanodet/mine/nanodet/workspace/ncnn_result/result.json'
+    json_path = '/root/deng/pet/ezqdk/v3/ezqdk/projects/reference/nanodet/results.json'
     eval_results = evaluator.evalFromLocal( json_path)
     print(eval_results)
     """
@@ -160,8 +164,98 @@ def DeConvTest():
     output = unpool(input2)
     print(output.size())
 
+def batchNoram():
+    before_emb = np.ones((4, 35, 5, 5))
+    after_emb =  np.zeros((4, 35, 5, 5))
+    before_emb = before_emb.reshape(before_emb.shape[0], -1)
+    after_emb = after_emb.reshape(after_emb.shape[0], -1)
+    before_emb, after_embsum_sim = normalize(before_emb), normalize(after_emb)
+    dot_sim = (before_emb * after_emb)
+    sum_sim = dot_sim.sum(axis=1)
+    sim = sum_sim.mean()
+
+
+    return
+    print('BatchNorm2d')
+    #m = nn.BatchNorm2d(100)
+    # Without Learnable Parameters
+    m = nn.BatchNorm2d(100, affine=True)
+    input = torch.randn(20, 100, 35, 45)
+    output = m(input)
+    print(m.weight.shape)
+    print(m.bias.shape)
+
+    print('GroupNorm')
+    input = torch.randn(20, 6, 10, 10)
+    # Separate 6 channels into 3 groups
+    m = nn.GroupNorm(3, 6)
+    # Separate 6 channels into 6 groups (equivalent with InstanceNorm)
+    #m = nn.GroupNorm(6, 6)
+    # Put all 6 channels into a single group (equivalent with LayerNorm)
+    #m = nn.GroupNorm(1, 6)
+    # Activating the module
+    output = m(input)
+    print(m.weight.shape)
+    print(m.bias.shape)
+
+def compute_mean_std():
+    filepath = r'/root/deng/nanodet/mine/nanodet/workspace/ncnn_result/image/'
+    images = os.listdir(filepath)
+    #means = [128, 128, 128]
+    #stds = [64, 64, 64]
+    mean_sum = [0, 0, 0]
+    std_sum = [0, 0, 0]
+    for image in images:
+        file = filepath + image
+        img = cv2.imread(file)
+        mean = np.mean(img, axis=(0, 1))
+        std = np.std(img, axis=(0, 1))
+        #np.concatenate([mean, ])
+        mean_sum = np.add(mean, mean_sum)
+        std_sum = np.add(std, std_sum)
+
+    num = len(images)
+    mean = mean_sum * 1.0 / num
+    std = std_sum * 1.0 / num
+    print(mean)
+    print(std)
+    """
+    img = cv2.imread('/root/deng/nanodet/mine/nanodet/tools/workspace/person_320_320.jpg')
+    print(img.shape)
+    mean = np.mean(img, axis=(0, 1))
+    print(mean)
+    std = np.std(img, axis=(0, 1))
+    print(std)
+    for i in range(3):
+        c = img[:, :, i]
+        c_mean = np.mean(c)
+        print(c_mean)
+        c_std = np.std(c)
+        print(c_std)
+    """
+
+def modify_pretrain_model():
+    model_path = '/root/deng/nanodet/mine/nanodet/pretrain/shufflenetv3_0.8x/model_best.pth.tar'
+    new_model = '/root/deng/nanodet/mine/nanodet/pretrain/shufflenetv3_0.8x/model_best.pth'
+    checkpoint = torch.load(model_path)
+
+    state_dict = checkpoint['state_dict']
+    new_sstate_dict = {}
+    for key, value in state_dict.items():
+        new_key = key.replace('module.', '')
+        new_sstate_dict[new_key] = value
+
+    torch.save({
+            'state_dict': new_sstate_dict,
+            }, new_model)
+    print("end")
+
+
 if __name__ == "__main__":
     args = parse_args()
-    #main(args)
+    main(args)
+    #batchNoram()
     #evalFromLocal(args)
-    DeConvTest()
+    #DeConvTest()
+    #compute_mean_std()
+    #modify_pretrain_model()

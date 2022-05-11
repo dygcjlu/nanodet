@@ -19,6 +19,7 @@ from .ghost_pan import GhostPAN
 from .pan import PAN
 from .tan import TAN
 from .ghost_pan_deconv import  GhostPANDeConv
+from .ghost_pan_nearest import  GhostPANNearest
 
 
 def build_fpn(cfg):
@@ -34,5 +35,7 @@ def build_fpn(cfg):
         return GhostPAN(**fpn_cfg)
     elif name == "GhostPANDeConv":
         return GhostPANDeConv(**fpn_cfg)
+    elif name == "GhostPANNearest":
+        return GhostPANNearest(**fpn_cfg)
     else:
         raise NotImplementedError

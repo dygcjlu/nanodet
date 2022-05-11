@@ -5,7 +5,7 @@ import torch.utils.model_zoo as model_zoo
 from ..module.activation import act_layers
 
 model_urls = {
-    "shufflenetv2_0.5x": "https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth",  # noqa: E501
+    "shufflenetv2_0.5x": None, #"https://download.pytorch.org/models/shufflenetv2_x0.5-f707e7126e.pth",  # noqa: E501
     "shufflenetv2_1.0x": "https://download.pytorch.org/models/shufflenetv2_x1-5666bf0f80.pth",  # noqa: E501
     "shufflenetv2_1.5x": None,
     "shufflenetv2_2.0x": None,
